@@ -45,7 +45,7 @@ namespace UrlParse
                 "news:alt.example.news",
                 "magnet:?xt=urn:btih:67y23n4k56y78h90uj32n56",
             };
-            
+
             List<string> urls        = ExtractUrls(data);
             List<string> domainNames = ExtractDomainNames(urls);
 
@@ -91,7 +91,7 @@ namespace UrlParse
 
         static bool GetWithStartHttp(string url)
         {
-            url = ChangeTurksihChar(url);
+            url = RemoveNonLatinAndUnwantedUrlCharacters(url);
 
             // Validate URL
             Regex validateDateRegex = new Regex("^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$");
@@ -100,7 +100,7 @@ namespace UrlParse
 
         static bool GetNotStartWithHttp(string url)
         {
-            url = ChangeTurksihChar(url);
+            url = RemoveNonLatinAndUnwantedUrlCharacters(url);
 
             // Validate URL without protocol
             Regex validateDateRegex = new Regex("^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$");
@@ -134,18 +134,17 @@ namespace UrlParse
         }
 
 
-        static string ChangeTurksihChar(string uri)
+        static string RemoveNonLatinAndUnwantedUrlCharacters(string input)
         {
-            char[] turkishWord     = { 'ö', 'ç', 'ş', 'ğ', 'ü', 'ı', 'Ö', 'Ç', 'Ş', 'Ğ', 'Ü', 'İ'};
-            char[] changeLatinWord = { 'o', 'c', 's', 'g', 'u', 'i', 'O', 'C', 'S', 'G', 'U', 'I'};
+            // Use Regex to find non-Latin characters
+            string latinPattern = "[^\\u0000-\\u007F]+";
+            string latinCleanedString = Regex.Replace(input, latinPattern, string.Empty);
 
-            for (int i = 0; i < turkishWord.Length; i++)
-            {
-                uri = uri.Replace(turkishWord[i], changeLatinWord[i]);
-            }
+            // Remove unwanted URL characters
+            string urlPattern = "[^a-zA-Z0-9-._~:/?#\\[\\]@!$&'()*+,;=]";
+            string urlCleanedString = Regex.Replace(latinCleanedString, urlPattern, string.Empty);
 
-            return uri;
+            return urlCleanedString;
         }
-
     }
 }
