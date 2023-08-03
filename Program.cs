@@ -1,5 +1,8 @@
 ﻿#region Imports / usings
 
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
 using System.Text.RegularExpressions;
 
 #endregion
@@ -42,8 +45,8 @@ namespace UrlParse
                 "news:alt.example.news",
                 "magnet:?xt=urn:btih:67y23n4k56y78h90uj32n56",
             };
-
-            List<string> urls = ExtractUrls(data);
+            
+            List<string> urls        = ExtractUrls(data);
             List<string> domainNames = ExtractDomainNames(urls);
 
             Console.WriteLine($"URL address; total: {urls.Count}");
@@ -58,7 +61,6 @@ namespace UrlParse
                 Console.WriteLine(domain);
             }
 
-
             Console.Read();
         }
 
@@ -68,17 +70,19 @@ namespace UrlParse
 
             foreach (string item in data)
             {
-                var stat1 = GetWithStartHttp(item);
+                var uri = item.Trim();
+
+                var stat1 = GetWithStartHttp(uri);
                 if (stat1)
                 {
-                    urls.Add(item);
+                    urls.Add(uri);
                     continue;
                 }
 
-                var stat2 = GetNotStartWithHttp(item);
+                var stat2 = GetNotStartWithHttp(uri);
                 if (stat2)
                 {
-                    urls.Add($"https://{item}");
+                    urls.Add($"https://{uri}");
                 }
                 else continue;
             }
@@ -87,6 +91,8 @@ namespace UrlParse
 
         static bool GetWithStartHttp(string url)
         {
+            url = ChangeTurksihChar(url);
+
             // Validate URL
             Regex validateDateRegex = new Regex("^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$");
             return validateDateRegex.IsMatch(url);
@@ -94,6 +100,8 @@ namespace UrlParse
 
         static bool GetNotStartWithHttp(string url)
         {
+            url = ChangeTurksihChar(url);
+
             // Validate URL without protocol
             Regex validateDateRegex = new Regex("^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$");
             return validateDateRegex.IsMatch(url);
@@ -123,6 +131,20 @@ namespace UrlParse
             }
 
             return domainNames;
+        }
+
+
+        static string ChangeTurksihChar(string uri)
+        {
+            char[] turkishWord     = { 'ö', 'ç', 'ş', 'ğ', 'ü', 'ı', 'Ö', 'Ç', 'Ş', 'Ğ', 'Ü', 'İ'};
+            char[] changeLatinWord = { 'o', 'c', 's', 'g', 'u', 'i', 'O', 'C', 'S', 'G', 'U', 'I'};
+
+            for (int i = 0; i < turkishWord.Length; i++)
+            {
+                uri = uri.Replace(turkishWord[i], changeLatinWord[i]);
+            }
+
+            return uri;
         }
 
     }
